@@ -1,1 +1,3 @@
-cmake -S src/ -B build/
+#! /bin/sh
+
+cd build; make
