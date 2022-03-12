@@ -1,8 +1,8 @@
-#include "tensorflow/lite/interpreter.h"
-#include "tensorflow/lite/kernels/register.h"
-#include "tensorflow/lite/model.h"
-#include "tensorflow/lite/tools/gen_op_registration.h"
-#include "tensorflow/lite/delegates/gpu/delegate.h"
+#include "TF/tensorflow/lite/interpreter.h"
+#include "TF/tensorflow/lite/kernels/register.h"
+#include "TF/tensorflow/lite/model.h"
+#include "TF/tensorflow/lite/tools/gen_op_registration.h"
+#include "TF/tensorflow/lite/delegates/gpu/delegate.h"
 #include <iostream>
 #include <chrono>
 
