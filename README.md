@@ -1,4 +1,4 @@
-# TFLite
+# [Master thesis](https://github.com/Sara980710/master_thesis): TFLite
 version: [tensorflow lite 2.8.0](https://github.com/tensorflow/tensorflow/releases/tag/v2.8.0)
 
 ## Installation of TF
