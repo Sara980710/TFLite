@@ -3,3 +3,9 @@ version: [tensorflow lite 2.8.0](https://github.com/tensorflow/tensorflow/releas
 
 ## Installation of TF
 I used this tutorial: [youtube](https://www.youtube.com/playlist?list=PLYV_j9XEhvorTV-ClcNA2xUb5YsdUHgRX)
+
+## Run (TF-lite model on C++)
+* run_classification.sh - classify one image
+* run_yolo.sh - detect boats on one image
+* run_timeit.sh - time the inference
+* run_timeit_multiple.sh - time the inference on multiple models at once
