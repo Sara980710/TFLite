@@ -23,6 +23,22 @@ Detector::Detector(const char *model_path, bool gpu, int threads, bool verbose){
     throw std::runtime_error("Failed to initiate the interpreter");
   }
 
+  if (gpu) {
+    if (verbose) {
+      std::cout<<"Activating GPU...\n";
+    }
+    
+    // Enable use of the GPU delegate, remove below lines to get cpu
+    // After TFlite >=2.6, initiate the gpu options
+    TfLiteGpuDelegateOptionsV2 gpu_options = TfLiteGpuDelegateOptionsV2Default();
+
+    auto* delegate = TfLiteGpuDelegateV2Create(&gpu_options);
+    if (interpreter->ModifyGraphWithDelegate(delegate) != kTfLiteOk) {
+      std::cout << "Fail" << std::endl;
+      return -1;
+    }
+  }
+
   if (verbose) {
     std::cout<<"-***-Allocate tensors...\n";
   }

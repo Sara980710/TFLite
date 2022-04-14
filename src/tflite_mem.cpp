@@ -3,19 +3,51 @@
 #include "tensorflow/lite/model.h"
 #include "tensorflow/lite/tools/gen_op_registration.h"
 
+
 #include <chrono>
 #include <string>
 #include <numeric>
 #include <iostream>
+#include <memory>
+#include <sys/resource.h>
+#include <math.h>
 
+struct AllocationMetrics
+{ 
+  uint32_t StaringUsage = 0;
+  uint32_t TotalAllocated = 0;
+  uint32_t TotalFreed = 0;
+  uint32_t MaxUsage = 0;
+
+  uint32_t GetCurrentAllocation() { return TotalAllocated-TotalFreed;}
+};
+
+static AllocationMetrics s_AllocationMetrics;
+
+void* operator new(size_t size) {
+  s_AllocationMetrics.TotalAllocated += size;
+  if (s_AllocationMetrics.GetCurrentAllocation() > s_AllocationMetrics.MaxUsage) {
+    s_AllocationMetrics.MaxUsage = s_AllocationMetrics.GetCurrentAllocation();
+  }
+
+  return malloc(size);
+}
+
+void operator delete(void* memory, size_t size) {
+  s_AllocationMetrics.TotalFreed += size;
+
+  free(memory);
+}
 
 int main(int argc, char **argv) {
-  if (argc != 4) {
-    throw std::invalid_argument("Required arguments: \n            -path to TFLite model file \n            -iterations for stable measures\n            -desired precision (0:f32, 1:f16, 2:int8)");
+  struct rusage res;
+  getrusage(RUSAGE_SELF, &res);
+  s_AllocationMetrics.StaringUsage = res.ru_maxrss;
+  if (argc != 3) {
+    throw std::invalid_argument("Required arguments: \n            -path to TFLite model file \n            -desired precision (0:f32, 1:f16, 2:int8)");
   }
   const char *modelFileName = argv[1];
-  const int iterations = std::stoi(argv[2]);
-  const int desiredPrecision = std::stoi(argv[3]);
+  const int desiredPrecision = std::stoi(argv[2]);
 
   std::cout<<"\n---------------------------------------\n";
   std::cout<<"Reading model...\n";
@@ -70,24 +102,14 @@ int main(int argc, char **argv) {
   std::cout<<"Warm up...\n";
   interpreter->Invoke();
 
-  // run invoation and measure time
-  std::vector<float> timeMeasures;
-  std::cout<<"Running " << iterations << " iterations...\n";
-  for (int i=0; i < iterations; i++) {
-    auto t1 = std::chrono::high_resolution_clock::now();
-    interpreter->Invoke();
-    auto t2 = std::chrono::high_resolution_clock::now();
-    float duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-    timeMeasures.push_back(duration);
+  // run single invoation and measure time
+  for (int i=0; i < 1; i++) {
+  interpreter->Invoke();
   }
+  std::cout<<"Max memory allocated: " << s_AllocationMetrics.MaxUsage*pow(10,-6)<< " MB" << std::endl;
+  std::cout<<"Memory baseline: " << s_AllocationMetrics.StaringUsage<< " Bytes" << std::endl;
+  std::cout<<"Memory used soleny by this process: " << (s_AllocationMetrics.MaxUsage + s_AllocationMetrics.StaringUsage) *pow(10,-6)<< " MB" << std::endl;
 
-  auto const count = static_cast<float>(timeMeasures.size());
-  float duration = std::accumulate(timeMeasures.begin(), timeMeasures.end(), 0) / count;
-  
-  std::cout << std::fixed;
-  std::cout << "Average inference time: " << duration << " us" << std::endl;
-  std::cout<<"Done! \n";
-  std::cout<<"---------------------------------------\n"<<std::endl;
   return 0;
 }
 

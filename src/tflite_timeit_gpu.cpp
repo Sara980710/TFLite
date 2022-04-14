@@ -2,8 +2,8 @@
 #include "tensorflow/lite/kernels/register.h"
 #include "tensorflow/lite/model.h"
 #include "tensorflow/lite/tools/gen_op_registration.h"
-#include "TF/tensorflow/lite/tools/gen_op_registration.h"
-#include "TF/tensorflow/lite/delegates/gpu/delegate.h"
+#include "tensorflow/lite/tools/gen_op_registration.h"
+#include "tensorflow/lite/delegates/gpu/delegate.h"
 
 #include <chrono>
 #include <string>
@@ -35,7 +35,13 @@ int main(int argc, char **argv) {
   }
 
   // Enable use of the GPU delegate, remove below lines to get cpu
-  auto* delegate = TfLiteGpuDelegateV2Create(nullptr);
+  std::cout<<"Activating GPU...\n";
+  
+  // Enable use of the GPU delegate, remove below lines to get cpu
+  // After TFlite >=2.6, initiate the gpu options
+  TfLiteGpuDelegateOptionsV2 gpu_options = TfLiteGpuDelegateOptionsV2Default();
+
+  auto* delegate = TfLiteGpuDelegateV2Create(&gpu_options);
   if (interpreter->ModifyGraphWithDelegate(delegate) != kTfLiteOk) {
     std::cout << "Fail" << std::endl;
     return -1;
@@ -48,6 +54,9 @@ int main(int argc, char **argv) {
 
   // Determine precision
   int input = interpreter->inputs()[0];
+  float* input_tensor_float;
+  uint8_t* input_tensor_int;
+
   switch (interpreter->tensor(input)->type)
     {
     case kTfLiteFloat32:
@@ -61,9 +70,11 @@ int main(int argc, char **argv) {
       else {
         fprintf(stderr, "cannot handle precision given in the arguments\n");
       }
+      input_tensor_float = interpreter->typed_input_tensor<float>(0);
       break;
     case kTfLiteUInt8:
         std::cout<<"precision: "<<"int8"<<std::endl;
+        input_tensor_int = interpreter->typed_input_tensor<uint8_t>(0);
         break;
     default:
         fprintf(stderr, "cannot handle input type\n");
@@ -85,9 +96,12 @@ int main(int argc, char **argv) {
     timeMeasures.push_back(duration);
   }
 
+  TfLiteGpuDelegateV2Delete(delegate);
+
   auto const count = static_cast<float>(timeMeasures.size());
   float duration = std::accumulate(timeMeasures.begin(), timeMeasures.end(), 0) / count;
   
+  std::cout << std::fixed;
   std::cout << duration << " us" << std::endl;
   std::cout<<"Done! \n";
   std::cout<<"---------------------------------------\n"<<std::endl;
