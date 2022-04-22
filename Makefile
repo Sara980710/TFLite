@@ -1,7 +1,8 @@
+
 all: tflite_test tflite_test_gpu tflite_test_memory tflite_test_gpu_memory
 
 tflite_test: src/tflite_timeit.cpp src/Detector.h 
-	g++ -std=c++11 -O2 -march=native src/tflite_timeit.cpp -ltensorflowlite -o TFLiteTimeit
+	g++ -std=c++11 -O2 -march=native src/tflite_timeit.cpp $(pkg-config --cflags --libs opencv4)-ltensorflowlite -o TFLiteTimeit
 
 tflite_test_gpu: src/tflite_timeit_gpu.cpp src/Detector.h 
 	g++ -std=c++11 -O2 -march=native src/tflite_timeit_gpu.cpp -ltensorflowlite -ltensorflowlite_gpu_delegate -lGLESv2 -lEGL -o TFLiteTimeitGPU
