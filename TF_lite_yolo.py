@@ -39,7 +39,7 @@ def box_iou(box1, box2):
     return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 # Load TFLite model and allocate tensors.
-interpreter = tf.lite.Interpreter(model_path="/home/sara/Documents/Master-thesis/TFLite/yolo_models/epoch80-fp16.tflite")
+interpreter = tf.lite.Interpreter(model_path="/home/sara/Documents/Master-thesis/TFLite/models/yolo_models/768-fp16.tflite")
 interpreter.allocate_tensors()
 
 # Get input and output tensors.

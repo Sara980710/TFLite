@@ -6,7 +6,7 @@ import torch
 import torchvision
 
 # Load TFLite model and allocate tensors.
-interpreter = tf.lite.Interpreter(model_path="/home/sara/Documents/Master-thesis/TFLite/models/classification/model_tf.tflite")
+interpreter = tf.lite.Interpreter(model_path="/home/sara/Documents/Master-thesis/TFLite/models/class_models/test16.tflite")
 interpreter.allocate_tensors()
 
 # Get input and output tensors.
