@@ -27,23 +27,25 @@ int main(int argc, char **argv) {
 
   Detector detector(modelFileName, gpu, threads, verbose);
   detector.load_image(imageFileName, desiredPrecision, normalize, verbose);
+  detector.tile_image(verbose);
 
   // Run
+  detector.load_input(verbose);
   detector.detect(verbose);
 
 
   // Process output
-  int* out_dims = detector.interpreter->output_tensor(0)->dims->data;
-  int batch_size = out_dims[0];
-  int num_dets = out_dims[1];
-  int det_size = out_dims[2];
+  int* outDims = detector.outDims;
+  int batch_size = outDims[0];
+  int num_dets = outDims[1];
+  int det_size = outDims[2];
 
   std::cout<<"-*i*- Batch size: "<<batch_size<<"\n";
   std::cout<<"-*i*- Number of detections: "<<num_dets<<"\n";
   std::cout<<"-*i*- Detection size: "<<det_size<<"\n";
 
 
-  float* output = detector.interpreter->typed_output_tensor<float>(0);
+  float* output = detector.get_output(verbose);
 
   int nrBoundingBoxes = 0;
   int imageWidth = detector.image.size().width;

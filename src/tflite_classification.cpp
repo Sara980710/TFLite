@@ -16,13 +16,15 @@ int main(int argc, char **argv) {
   
   Detector detector(modelFileName, gpu, threads, verbose);
   detector.load_image(imageFileName, desiredPrecision, normalize, verbose);
+  detector.tile_image(verbose);
 
   // Run
+  detector.load_input(verbose);
   detector.detect(verbose);
 
 
   // Process output
-  float* output = detector.interpreter->typed_output_tensor<float>(0);
+  float* output = detector.get_output(verbose);
 
   std::cout<<"-*i*-----boat: "<<output[0]<<"\n";
   std::cout<<"-*i*-----no boat: "<<output[1]<<"\n";

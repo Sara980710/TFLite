@@ -1,115 +1,102 @@
 #include <iostream>
 #include <chrono>
 #include "Detector.h"
+#include "tensorflow/lite/delegates/gpu/delegate.h"
 
-Detector::Detector(const char *model_path, bool gpu, int threads, bool verbose){
-
+Detector::Detector(const char *model_path, bool gpu = false, int threads = 1, bool verbose = false){
   // Read model 
-  if (verbose) {
-      std::cout<<"-***-Reading model...\n";
-  }
-  
-  model = tflite::FlatBufferModel::BuildFromFile(model_path);
-  if (model == nullptr) {
+  if (verbose && !time) std::cout<<"Reading model...\n";
+  m_model = tflite::FlatBufferModel::BuildFromFile(model_path);
+  if (m_model == nullptr) {
     throw std::runtime_error("The model was not able to build to tflite::FlatBufferModel");
   }
   
-  if (verbose) {
-      std::cout<<"-***-Initiating interpreter...\n";
-  }
-  
-  tflite::InterpreterBuilder(*model, resolver)(&interpreter);
-  if (interpreter == nullptr){
+  if (verbose && !time) std::cout<<"Initiating interpreter...\n";
+  tflite::InterpreterBuilder(*m_model, m_resolver)(&m_interpreter);
+  if (m_interpreter == nullptr){
     throw std::runtime_error("Failed to initiate the interpreter");
   }
 
+  // Set GPU
+  /* 
   if (gpu) {
-    if (verbose) {
-      std::cout<<"Activating GPU...\n";
-    }
+    if (verbose && !time) std::cout<<"Activating GPU...\n";
     
     // Enable use of the GPU delegate, remove below lines to get cpu
     // After TFlite >=2.6, initiate the gpu options
     TfLiteGpuDelegateOptionsV2 gpu_options = TfLiteGpuDelegateOptionsV2Default();
 
     auto* delegate = TfLiteGpuDelegateV2Create(&gpu_options);
-    if (interpreter->ModifyGraphWithDelegate(delegate) != kTfLiteOk) {
-      std::cout << "Fail" << std::endl;
-      return -1;
+    if (m_interpreter->ModifyGraphWithDelegate(delegate) != kTfLiteOk) {
+      throw std::runtime_error("Failed to create GPU deligate");
+      exit(-1);
     }
-  }
+  } */
 
-  if (verbose) {
-    std::cout<<"-***-Allocate tensors...\n";
-  }
-  
-  if (interpreter->AllocateTensors() != kTfLiteOk){
+  // Allocating tensors
+  if (verbose && !time) std::cout<<"Allocate tensors...\n";
+  if (m_interpreter->AllocateTensors() != kTfLiteOk){
     throw std::runtime_error("Failed to allocate tensor");
   }
 
   // Configure the interpreter
-  interpreter->SetNumThreads(threads);
-  
-  // Get info about model 
-  int input = interpreter->inputs()[0];
-  TfLiteIntArray* dims = interpreter->tensor(input)->dims;
-  auto input_type = interpreter->tensor(input)->type;
-  int input_batch = dims->data[0];
-  int input_height = dims->data[1];
-  int input_width = dims->data[2];
-  int input_channels = dims->data[3];
+  m_interpreter->SetNumThreads(threads);
 
-  if (verbose) {
+  int input = m_interpreter->inputs()[0];
+  inDims = m_interpreter->tensor(input)->dims->data;
+  outDims = m_interpreter->output_tensor(0)->dims->data;
+
+  if (verbose && !time) {
+    // Get info about model 
     std::cout<<"-***-Get model info...\n" \
-    << "-*i*-- tensors size: " << interpreter->tensors_size()<<"\n";
-    std::cout << "-*i*-- nr of operations: " << interpreter->nodes_size()<<"\n";
-    std::cout<<"-*i*-- Input height: "<<input_height<<"\n";
-    std::cout<<"-*i*-- Input width: "<<input_width<<"\n";
-    std::cout<<"-*i*-- Input Nr channels: "<<input_channels<<"\n";
-    std::cout<<"-*i*-- Input type: "<<input_type<<std::endl;
+    << "-*i*-- tensors size: " << m_interpreter->tensors_size()<<"\n";
+    std::cout << "-*i*-- nr of operations: " << m_interpreter->nodes_size()<<"\n";
+    std::cout<<"-*i*-- Input batch size: "<<inDims[0]<<"\n";
+    std::cout<<"-*i*-- Input height: "<<inDims[1]<<"\n";
+    std::cout<<"-*i*-- Input width: "<<inDims[2]<<"\n";
+    std::cout<<"-*i*-- Input Nr channels: "<<inDims[3]<<"\n";
+    std::cout<<"-*i*-- Input type: "<<m_interpreter->tensor(input)->type<<std::endl;
   }
+
+  currentTile = 0;
 };
 
 Detector::~Detector(){};
 
-void Detector::load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose){
+void Detector::load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose=false){
   // Load image 
-  if (verbose) std::cout<<"-***-Loading image...\n";
-  
-  auto frame = cv::imread(image_path);
-  if (frame.empty())
+  if (verbose) std::cout<<"Loading image...\n";
+
+  image = cv::imread(image_path);
+  if (image.empty())
   {
       throw std::runtime_error("Failed to load image");
       exit(-1);
   }
-  image = frame;
-  int input = interpreter->inputs()[0];
-  if (image.size().width != interpreter->tensor(input)->dims->data[2] || image.size().height != interpreter->tensor(input)->dims->data[1]) {
-      throw std::runtime_error("Image dimensions does not match teh input dimensions on model");
-      exit(-1);
-  }
+
+  int input = m_interpreter->inputs()[0];
 
   // Check input type
-  if (verbose) {
-      std::cout<<"-***-Creating tensors...\n";
-  }
-  
-  switch (interpreter->tensor(input)->type)
+  if (verbose) std::cout<<"Creating tensors...\n";
+
+  switch (m_interpreter->tensor(input)->type)
     {
     case kTfLiteFloat32:
-      if (desiredPrecision == 0) {
-        if (verbose) std::cout<<"-*i*-- Input precision: "<<"Float32"<<std::endl;
+      if (desiredPrecision == 0) {image.convertTo(image, CV_32F, 1.0, 0);
+        if (verbose) std::cout<<"Input precision: "<<"Float32"<<std::endl;
       } 
       else if (desiredPrecision == 1) {
-        interpreter->SetAllowFp16PrecisionForFp32(true);
-        if (verbose) std::cout<<"-*i*-- Input type: "<<"Float16"<<std::endl;
+        m_interpreter->SetAllowFp16PrecisionForFp32(true);
+        if (verbose) std::cout<<"Input type: "<<"Float16"<<std::endl;
       } 
       else {
         fprintf(stderr, "cannot handle precision given in the arguments\n");
       }
       if (normalize) {
+        // (yolo)
         image.convertTo(image, CV_32F, 1.0 / 255, 0);
       } else {
+        // (classification)
         image.convertTo(image, CV_32F, 1.0, 0);
       }
 
@@ -122,27 +109,75 @@ void Detector::load_image(const char *image_path, int desiredPrecision, bool nor
         exit(-1);
     }
 
-    memcpy(interpreter->typed_tensor<float>(0), image.data, image.total() * image.elemSize());
-
-    // Normalize to plot with right values
+    // Normalize to plot with right values (classification)
     if (!normalize) {
       image.convertTo(image, CV_32F, 1.0/255, 0);
     }
 };
 
-void Detector::detect(bool verbose) {
-  // Warmup to make sure cache are warm and any JIT compiling is in the way has run/tuned
-  if (verbose) std::cout<<"-***-Warm up...\n";
-  if (interpreter->Invoke() != kTfLiteOk){
-    throw std::runtime_error("Failed to run model");
+void Detector::tile_image(bool verbose) {
+  if (image.size().width < inDims[2] || image.size().height < inDims[1]) {
+    fprintf(stderr, "Cannot handle images smaller than the input size\n");
+    exit(-1);
   }
-  
-  if (verbose) std::cout<<"-***-Run...\n";
-  auto t1 = std::chrono::high_resolution_clock::now();
-  interpreter->Invoke();
-  auto t2 = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-  if (verbose) std::cout << "-*i*-- Inference time: "<< duration << " us" << std::endl;
+
+  // Calculate how to tile image
+  for (int x=0; x < image.size().width; x += inDims[2]) {
+    for (int y=0; y < image.size().height; y += inDims[1]) {
+      // Handle edges
+      if (x + inDims[2] >= image.size().width && y + inDims[1] >= image.size().height) {
+        m_tiles.push_back(cv::Rect(image.size().width - inDims[2], image.size().height - inDims[1], inDims[2], inDims[1]));
+      } else {
+        if (x + inDims[2] >= image.size().width) {
+          m_tiles.push_back(cv::Rect(image.size().width - inDims[2], y, inDims[2], inDims[1]));
+        } else if (y + inDims[1] >= image.size().height) {
+          m_tiles.push_back(cv::Rect(x, image.size().height - inDims[1], inDims[2], inDims[1]));
+        } else {
+          m_tiles.push_back(cv::Rect(x, y, inDims[2], inDims[1]));
+        }
+      }
+    }
+  }
+
+  if (verbose) {
+    std::cout << "Image size: " << image.size() << "\n";
+    std::cout << "Input size: [" << inDims[2] << " x " << inDims[1] << "]\n";
+    std::cout << "Nr tiles: " << m_tiles.size() << std::endl;
+  }
+}
+
+void Detector::load_input(bool verbose) {
+  if (verbose) std::cout << "Loading input, tile " << currentTile + 1<< "/" << m_tiles.size() << std::endl;
+  int input = m_interpreter->inputs()[0];
+
+  switch (m_interpreter->tensor(input)->type)
+    {
+    case kTfLiteFloat32:
+      memcpy(m_interpreter->typed_tensor<float>(0), image(m_tiles[currentTile]).data, inDims[1] * inDims[2] * 3 * 4); 
+      break;
+    case kTfLiteUInt8:
+        memcpy(m_interpreter->typed_tensor<uint8_t>(0), image(m_tiles[currentTile]).data, inDims[1] * inDims[2] * 3 * 1);
+        break;
+    default:
+        fprintf(stderr, "cannot handle input type\n");
+        exit(-1);
+    }
+  currentTile ++;
+  if (currentTile != -1 && currentTile >= m_tiles.size()) {
+    currentTile = -1;
+    if (verbose) std::cout << "All tiles done!" << std::endl;
+  }
+};  
+
+void Detector::detect(bool verbose) {
+  if (verbose) std::cout<<"Run...\n";
+  m_interpreter->Invoke();
+  if (verbose) std::cout << "Inference done!" << std::endl;
+}
+
+float* Detector::get_output(bool verbose) {
+  if (verbose) std::cout<<"Getting output...\n";
+  return m_interpreter->typed_output_tensor<float>(0);
 }
 
 

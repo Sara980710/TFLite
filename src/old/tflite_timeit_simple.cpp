@@ -2,7 +2,6 @@
 #include "tensorflow/lite/kernels/register.h"
 #include "tensorflow/lite/model.h"
 #include "tensorflow/lite/tools/gen_op_registration.h"
-#include "tensorflow/lite/delegates/gpu/delegate.h"
 
 #include <chrono>
 #include <string>
@@ -18,7 +17,7 @@ int main(int argc, char **argv) {
   const int iterations = std::stoi(argv[2]);
   const int desiredPrecision = std::stoi(argv[3]);
 
-  std::cout<<"\n ---------------------------------------\n";
+  std::cout<<"\n---------------------------------------\n";
   std::cout<<"Reading model...\n";
   auto model = tflite::FlatBufferModel::BuildFromFile(modelFileName);
   if (model == nullptr) {
@@ -31,19 +30,6 @@ int main(int argc, char **argv) {
   tflite::InterpreterBuilder(*model, resolver)(&interpreter);
   if (interpreter == nullptr){
     throw std::runtime_error("Failed to initiate the interpreter");
-  }
-
-  // Enable use of the GPU delegate, remove below lines to get cpu
-  std::cout<<"Activating GPU...\n";
-  
-  // Enable use of the GPU delegate, remove below lines to get cpu
-  // After TFlite >=2.6, initiate the gpu options
-  TfLiteGpuDelegateOptionsV2 gpu_options = TfLiteGpuDelegateOptionsV2Default();
-
-  auto* delegate = TfLiteGpuDelegateV2Create(&gpu_options);
-  if (interpreter->ModifyGraphWithDelegate(delegate) != kTfLiteOk) {
-    std::cout << "Fail" << std::endl;
-    return -1;
   }
 
   std::cout<<"Allocate tensors...\n";
@@ -84,7 +70,7 @@ int main(int argc, char **argv) {
   std::cout<<"Warm up...\n";
   interpreter->Invoke();
 
-  // run single invoation and measure time
+  // run invoation and measure time
   std::vector<float> timeMeasures;
   std::cout<<"Running " << iterations << " iterations...\n";
   for (int i=0; i < iterations; i++) {
@@ -95,13 +81,11 @@ int main(int argc, char **argv) {
     timeMeasures.push_back(duration);
   }
 
-  TfLiteGpuDelegateV2Delete(delegate);
-
   auto const count = static_cast<float>(timeMeasures.size());
   float duration = std::accumulate(timeMeasures.begin(), timeMeasures.end(), 0) / count;
   
   std::cout << std::fixed;
-  std::cout << duration << " us" << std::endl;
+  std::cout << "Average inference time: " << duration << " us" << std::endl;
   std::cout<<"Done! \n";
   std::cout<<"---------------------------------------\n"<<std::endl;
   return 0;
