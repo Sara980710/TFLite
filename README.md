@@ -6,8 +6,21 @@ version: [tensorflow lite 2.8.0](https://github.com/tensorflow/tensorflow/releas
 ## Installation of TF
 I used this tutorial: [youtube](https://www.youtube.com/playlist?list=PLYV_j9XEhvorTV-ClcNA2xUb5YsdUHgRX)
 
+## Configure and Build using CmakeLists.txt
+Run following:
+````
+bash configure.sh
+bash build.sh
+````
 ## Run (TF-lite model on C++)
 * run_classification.sh - classify one image
 * run_yolo.sh - detect boats on one image
 * run_timeit.sh - time the inference
 * run_timeit_multiple.sh - time the inference on multiple models at once
+* run_memory.sh - measure the memory usage of the programs
+
+## Makefile
+VPN and SSH is used to achieve access to the satellite computer where TFLite is already installed.
+* Copy the src folder, models folder and Makefile to the satellite computer using scp (safe copy)
+* run:```` make ```` to build the executable files
+* 
