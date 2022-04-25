@@ -6,6 +6,16 @@ version: [tensorflow lite 2.8.0](https://github.com/tensorflow/tensorflow/releas
 ## Installation of TF
 I used this tutorial: [youtube](https://www.youtube.com/playlist?list=PLYV_j9XEhvorTV-ClcNA2xUb5YsdUHgRX)
 
+### OpenCV
+````bash
+sudo apt update
+sudo apt install libopencv-dev python3-opencv
+````
+### OpenGL
+````bash
+sudo apt-get install freeglut3-dev
+````
+
 ## Configure and Build using CmakeLists.txt
 Run following:
 ````
