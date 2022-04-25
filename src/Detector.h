@@ -4,7 +4,7 @@
 #include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/register.h"
 #include "tensorflow/lite/model.h"
-//#include "tensorflow/lite/tools/gen_op_registration.h"
+#include "tensorflow/lite/tools/gen_op_registration.h"
 #include <opencv2/opencv.hpp>
 
 class Detector

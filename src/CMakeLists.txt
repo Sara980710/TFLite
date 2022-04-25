@@ -20,28 +20,21 @@ set(TFLITE_LIBS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../tflite-dist/libs/linux_x64/"
 set(YOLO TFLiteYolov5)
 set(CLASS TFLiteClassification)
 set(TIME TFLiteTimeit)
-#set(MEMORY TFLiteMemory)
+set(MEMORY TFLiteMemory)
 
 set(TIMEGPU TFLiteTimeitGPU)
-#set(MEMORYGPU TFLiteMemoryGPY)
+set(MEMORYGPU TFLiteMemoryGPY)
 
 
 # Create executable files
 add_executable(${YOLO} tflite_yolo.cpp Detector.cpp Detector.h)
 add_executable(${CLASS} tflite_classification.cpp Detector.cpp Detector.h)
 add_executable(${TIME} tflite_timeit.cpp Detector.cpp Detector.h)
-#add_executable(${MEMORY} tflite_mem.cpp)
-
-add_executable(${TIMEGPU} tflite_timeit_gpu.cpp)
-#add_executable(${MEMORYGPU} tflite_mem_gpu.cpp)
-
-
-# TFLite libraries
-add_library(tensorflowlite SHARED IMPORTED)
-set_property(TARGET tensorflowlite PROPERTY IMPORTED_LOCATION ${TFLITE_LIBS_DIR}libtensorflowlite.so)
+add_executable(${MEMORY} tflite_mem.cpp Detector.cpp Detector.h)
 
 # TFLite GPU libraries
 foreach(_target
+    libtensorflowlite
     libtensorflowlite_gpu_delegate
     libtensorflowlite_gpu_gl
     libtensorflowlite_xnnpack)
@@ -49,15 +42,13 @@ foreach(_target
   add_library(${_target} SHARED IMPORTED)
   set_target_properties(${_target} PROPERTIES IMPORTED_LOCATION ${TFLITE_LIBS_DIR}/${_target}.so)
   target_link_libraries(${_target} INTERFACE OpenGL::GLX OpenGL::EGL)
-  list(APPEND TFLITE_LIBS_GPU ${_target})
+  list(APPEND TFLITE_LIBS ${_target})
 endforeach()
 
 
 # Link libraries
-target_link_libraries(${YOLO} tensorflowlite ${OpenCV_LIBS})
-target_link_libraries(${CLASS} tensorflowlite ${OpenCV_LIBS})
-target_link_libraries(${TIME} tensorflowlite ${OpenCV_LIBS})
-#target_link_libraries(${MEMORY} tensorflowlite ${OpenCV_LIBS})
+target_link_libraries(${YOLO} ${TFLITE_LIBS} ${OpenCV_LIBS})
+target_link_libraries(${CLASS} ${TFLITE_LIBS} ${OpenCV_LIBS})
+target_link_libraries(${TIME} ${TFLITE_LIBS} ${OpenCV_LIBS})
+target_link_libraries(${MEMORY} ${TFLITE_LIBS} ${OpenCV_LIBS})
 
-target_link_libraries(${TIMEGPU} tensorflowlite ${TFLITE_LIBS_GPU} ${OpenCV_LIBS})
-#target_link_libraries(${MEMORYGPU} tensorflowlite ${OpenCV_LIBS})

@@ -18,7 +18,7 @@ Detector::Detector(const char *model_path, bool gpu = false, int threads = 1, bo
   }
 
   // Set GPU
-  /* 
+  
   if (gpu) {
     if (verbose && !time) std::cout<<"Activating GPU...\n";
     
@@ -31,7 +31,7 @@ Detector::Detector(const char *model_path, bool gpu = false, int threads = 1, bo
       throw std::runtime_error("Failed to create GPU deligate");
       exit(-1);
     }
-  } */
+  }
 
   // Allocating tensors
   if (verbose && !time) std::cout<<"Allocate tensors...\n";
