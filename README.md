@@ -13,8 +13,10 @@ sudo apt install libopencv-dev python3-opencv
 ````
 ### OpenGL
 ````bash
-sudo apt-get install freeglut3-dev
+sudo apt update
+sudo apt install ocl-icd-opencl-dev
 ````
+(might need sudo apt-get install freeglut3-dev)
 
 ## Configure and Build using CmakeLists.txt
 Run following:
