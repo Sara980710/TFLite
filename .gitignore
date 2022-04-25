@@ -17,6 +17,11 @@
 
 # Compiled Dynamic libraries
 *.so
+!tflite-dist/libs/linux_x64/libtensorflowlite.so
+!tflite-dist/libs/linux_x64/libtensorflowlite_c.so
+!tflite-dist/libs/linux_x64/libtensorflowlite_gpu_delegate.so
+!tflite-dist/libs/linux_x64/libtensorflowlite_gpu_gl.so
+!tflite-dist/libs/linux_x64/libtensorflowlite_xnnpack.so
 *.dylib
 *.dll
 
@@ -58,5 +63,5 @@ _deps
 
 /home/sara/Desktop/Master-thesis/master_thesis/TFLite/HelloWorld/build
 [Bb][Uu][Ii][Ll][Dd]/
-tflite-dist/*
+tflite-dist/include/*
 .vscode/*
