@@ -1,17 +1,10 @@
+all: tflite_test tflite_test_memory
 
-all: tflite_test tflite_test_gpu tflite_test_memory tflite_test_gpu_memory
+tflite_test: src/tflite_timeit.cpp src/Detector.cpp src/Detector.h
+	g++ -o build/TFLiteTimeit src/tflite_timeit.cpp src/Detector.cpp src/Detector.h -I/opt/opencv-4.5.4/include/opencv4 -L/opt/opencv-4.5.4/lib -lopencv_gapi -lopencv_stitching -lopencv_highgui -lopencv_videoio -lopencv_ml -lopencv_video -lopencv_objdetect -lopencv_calib3d -lopencv_imgcodecs -lopencv_features2d -lopencv_dnn -lopencv_flann -lopencv_photo -lopencv_imgproc -lopencv_core -ltensorflowlite -ltensorflowlite_gpu_delegate -lGLESv2 -lEGL 
 
-tflite_test: src/tflite_timeit.cpp src/Detector.h 
-	g++ -std=c++11 -O2 -march=native src/tflite_timeit.cpp $(pkg-config --cflags --libs opencv4)-ltensorflowlite -o TFLiteTimeit
-
-tflite_test_gpu: src/tflite_timeit_gpu.cpp src/Detector.h 
-	g++ -std=c++11 -O2 -march=native src/tflite_timeit_gpu.cpp -ltensorflowlite -ltensorflowlite_gpu_delegate -lGLESv2 -lEGL -o TFLiteTimeitGPU
-
-tflite_test_memory: src/tflite_mem.cpp src/Detector.h 
-	g++ -std=c++11 -O2 -march=native src/tflite_timeit.cpp -ltensorflowlite -o TFLiteMemory
-
-tflite_test_gpu_memory: src/tflite_mem_gpu.cpp src/Detector.h 
-	g++ -std=c++11 -O2 -march=native src/tflite_timeit_gpu.cpp -ltensorflowlite -ltensorflowlite_gpu_delegate -lGLESv2 -lEGL -o TFLiteMemoryGPU
+tflite_test_memory: src/tflite_mem.cpp src/Detector.cpp src/Detector.h
+	g++ -o build/TFLiteMemory src/tflite_mem.cpp src/Detector.cpp src/Detector.h -I/opt/opencv-4.5.4/include/opencv4 -L/opt/opencv-4.5.4/lib -lopencv_gapi -lopencv_stitching -lopencv_highgui -lopencv_videoio -lopencv_ml -lopencv_video -lopencv_objdetect -lopencv_calib3d -lopencv_imgcodecs -lopencv_features2d -lopencv_dnn -lopencv_flann -lopencv_photo -lopencv_imgproc -lopencv_core -ltensorflowlite -ltensorflowlite_gpu_delegate -lGLESv2 -lEGL 
 
 clean:
-	rm TFLiteTimeit TFLiteTimeitGPU TFLiteMemory TFLiteMemoryGPU || true
+	rm TFLiteTimeit TFLiteMemory || true

@@ -71,7 +71,8 @@ void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, co
 
 int main(int argc, char **argv) {
   if (argc != 7) {
-    throw std::invalid_argument("Required arguments: \n            -path to TFLite model file \n            -iterations for stable measures\n            -desired precision (0:f32, 1:f16, 2:int8)\n            -path to image input\n            -Number of threads\n            -device(gpu or cpu)");
+    std::cout<<argc<<std::endl;
+    throw std::invalid_argument("Required arguments: \n            -path to TFLite model file \n            -iterations for stable measures\n            -desired precision (0:f32, 1:f16, 2:int8)\n            -path to image input\n            -Number of threads\n            -device (0:cpu or 1:gpu)");
   }
   const char *modelFileName = argv[1];
   const int iterations = std::stoi(argv[2]);
@@ -80,8 +81,8 @@ int main(int argc, char **argv) {
   const int threads = std::stoi(argv[5]);
 
   bool gpu = false;
-  if (argv[6] == "gpu") {
-    bool gpu = true;
+  if (std::stoi(argv[6]) == 1) {
+    gpu = true;
   }
   
   bool verbose = false;
