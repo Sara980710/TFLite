@@ -14,6 +14,7 @@ class Detector
   tflite::ops::builtin::BuiltinOpResolver m_resolver;
   std::unique_ptr<tflite::Interpreter> m_interpreter;
   std::vector<cv::Rect> m_tiles;
+  TfLiteDelegate* m_delegate;
 
  public:
   cv::Mat image;

@@ -3,38 +3,37 @@
 #include "Detector.h"
 #include "tensorflow/lite/delegates/gpu/delegate.h"
 
-Detector::Detector(const char *model_path, bool gpu = false, int threads = 1, bool verbose = false){
+Detector::Detector(const char *model_path, bool gpu, int threads, bool verbose){
   // Read model 
-  if (verbose && !time) std::cout<<"Reading model...\n";
+  if (verbose) std::cout<<"Reading model...\n";
   m_model = tflite::FlatBufferModel::BuildFromFile(model_path);
   if (m_model == nullptr) {
     throw std::runtime_error("The model was not able to build to tflite::FlatBufferModel");
   }
   
-  if (verbose && !time) std::cout<<"Initiating interpreter...\n";
+  if (verbose) std::cout<<"Initiating interpreter...\n";
   tflite::InterpreterBuilder(*m_model, m_resolver)(&m_interpreter);
   if (m_interpreter == nullptr){
     throw std::runtime_error("Failed to initiate the interpreter");
   }
 
   // Set GPU
-  
   if (gpu) {
-    if (verbose && !time) std::cout<<"Activating GPU...\n";
+    if (verbose) std::cout<<"Activating GPU...\n";
     
     // Enable use of the GPU delegate, remove below lines to get cpu
     // After TFlite >=2.6, initiate the gpu options
     TfLiteGpuDelegateOptionsV2 gpu_options = TfLiteGpuDelegateOptionsV2Default();
 
-    auto* delegate = TfLiteGpuDelegateV2Create(&gpu_options);
-    if (m_interpreter->ModifyGraphWithDelegate(delegate) != kTfLiteOk) {
+    m_delegate = TfLiteGpuDelegateV2Create(&gpu_options);
+    if (m_interpreter->ModifyGraphWithDelegate(m_delegate) != kTfLiteOk) {
       throw std::runtime_error("Failed to create GPU deligate");
       exit(-1);
     }
   }
 
   // Allocating tensors
-  if (verbose && !time) std::cout<<"Allocate tensors...\n";
+  if (verbose) std::cout<<"Allocate tensors...\n";
   if (m_interpreter->AllocateTensors() != kTfLiteOk){
     throw std::runtime_error("Failed to allocate tensor");
   }
@@ -46,7 +45,7 @@ Detector::Detector(const char *model_path, bool gpu = false, int threads = 1, bo
   inDims = m_interpreter->tensor(input)->dims->data;
   outDims = m_interpreter->output_tensor(0)->dims->data;
 
-  if (verbose && !time) {
+  if (verbose) {
     // Get info about model 
     std::cout<<"-***-Get model info...\n" \
     << "-*i*-- tensors size: " << m_interpreter->tensors_size()<<"\n";
@@ -61,9 +60,9 @@ Detector::Detector(const char *model_path, bool gpu = false, int threads = 1, bo
   currentTile = 0;
 };
 
-Detector::~Detector(){};
+Detector::~Detector(){TfLiteGpuDelegateV2Delete(m_delegate);};
 
-void Detector::load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose=false){
+void Detector::load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose){
   // Load image 
   if (verbose) std::cout<<"Loading image...\n";
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 
 project(TFLite)
 
@@ -21,10 +21,6 @@ set(YOLO TFLiteYolov5)
 set(CLASS TFLiteClassification)
 set(TIME TFLiteTimeit)
 set(MEMORY TFLiteMemory)
-
-set(TIMEGPU TFLiteTimeitGPU)
-set(MEMORYGPU TFLiteMemoryGPY)
-
 
 # Create executable files
 add_executable(${YOLO} tflite_yolo.cpp Detector.cpp Detector.h)
