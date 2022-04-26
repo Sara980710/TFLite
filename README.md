@@ -3,6 +3,8 @@
 
 version: [tensorflow lite 2.8.0](https://github.com/tensorflow/tensorflow/releases/tag/v2.8.0)
 
+https://github.com/clbr/radeontop
+
 ## Installation of TF
 I used this tutorial: [youtube](https://www.youtube.com/playlist?list=PLYV_j9XEhvorTV-ClcNA2xUb5YsdUHgRX)
 
@@ -13,8 +15,10 @@ sudo apt install libopencv-dev python3-opencv
 ````
 ### OpenGL
 ````bash
-sudo apt-get install freeglut3-dev
+sudo apt update
+sudo apt install ocl-icd-opencl-dev
 ````
+(might need sudo apt-get install freeglut3-dev)
 
 ## Configure and Build using CmakeLists.txt
 Run following:
