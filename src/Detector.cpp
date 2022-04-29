@@ -30,6 +30,9 @@ Detector::Detector(const char *model_path, bool gpu, int threads, bool verbose){
       throw std::runtime_error("Failed to create GPU deligate");
       exit(-1);
     }
+    m_gpu = true;
+  } else {
+    m_gpu = false;
   }
 
   // Allocating tensors
@@ -60,7 +63,7 @@ Detector::Detector(const char *model_path, bool gpu, int threads, bool verbose){
   currentTile = 0;
 };
 
-Detector::~Detector(){TfLiteGpuDelegateV2Delete(m_delegate);};
+Detector::~Detector(){if (m_gpu) {TfLiteGpuDelegateV2Delete(m_delegate);}};
 
 void Detector::load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose){
   // Load image 
@@ -152,10 +155,10 @@ void Detector::load_input(bool verbose) {
   switch (m_interpreter->tensor(input)->type)
     {
     case kTfLiteFloat32:
-      memcpy(m_interpreter->typed_tensor<float>(0), image(m_tiles[currentTile]).data, inDims[1] * inDims[2] * 3 * 4); 
+      memcpy(m_interpreter->typed_tensor<float>(0), image(m_tiles[currentTile]).data, inDims[0] * inDims[1] * inDims[2] * inDims[3] * 4); 
       break;
     case kTfLiteUInt8:
-        memcpy(m_interpreter->typed_tensor<uint8_t>(0), image(m_tiles[currentTile]).data, inDims[1] * inDims[2] * 3 * 1);
+        memcpy(m_interpreter->typed_tensor<uint8_t>(0), image(m_tiles[currentTile]).data, inDims[0] * inDims[1] * inDims[2] * inDims[3] * 4);
         break;
     default:
         fprintf(stderr, "cannot handle input type\n");

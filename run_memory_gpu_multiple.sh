@@ -1,18 +1,18 @@
 #! /bin/bash
 
 # (0:f32, 1:f16, 2:int8)
-declare -a precisions=( "0" "1" "2" ) 
+declare -a precisions=( "0" "1" ) #( "0" "1" "2" ) 
 declare -a types=( "yolo_models" "class_models" )
-declare -a sizes=( "32" "192" "384" "768" "1152" "1536" )
+declare -a sizes=( "192" "384" "768" "1152" "1536" )#( "32" "192" "384" "768" "1152" "1536" )
 
-iterations="100"
-device="1" # (0:"cpu" or 1:"gpu")
+iterations="3"
+device="0" # (0:"cpu" or 1:"gpu")
 threads="1"
 
 image="big.jpg"
 pathTFLite="/home/ebara/Documents/master_thesis/TFLite"
 #pathTFLite="/home/sara/Documents/Master-thesis/TFLite"
-#pathTFLite=""
+#pathTFLite="/home/spacecloud/ebara/ml_performancetests" # ix5
 
 echo "Info: precisions:$precisions, types:$types, sizes:$sizes, iterations:$iterations, device:$device, path_models:$pathTFLite/models, image: $image, nr threads: $threads"
 echo ""

@@ -15,6 +15,7 @@ class Detector
   std::unique_ptr<tflite::Interpreter> m_interpreter;
   std::vector<cv::Rect> m_tiles;
   TfLiteDelegate* m_delegate;
+  bool m_gpu;
 
  public:
   cv::Mat image;

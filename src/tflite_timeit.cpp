@@ -98,7 +98,6 @@ int main(int argc, char **argv) {
     std::cout << i + 1<< ", " << std::flush;
     run_once(modelFileName, gpu, threads, verbose, imageFileName, desiredPrecision, normalize);
   }
-  std::cout << std::endl;
 
   float timeLoadImage = getAverage(s_measures.loadImage);
   float timeTileImage = getAverage(s_measures.tileImage);
@@ -139,7 +138,7 @@ int main(int argc, char **argv) {
                                   << *std::min_element(s_measures.getOutput.begin(), s_measures.getOutput.end()) << ", " \
                                   << *std::max_element(s_measures.getOutput.begin(), s_measures.getOutput.end()) << ") us\n";
 
-  std::cout<<"-***-Done! \n";
+  std::cout<<"-***-Done! \n"<<std::endl;
   return 0;
 }
 

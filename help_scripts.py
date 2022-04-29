@@ -3,8 +3,8 @@ import numpy as np
 
 
 def create_big_im():
-    img = np.zeros([10000,10000,3], np.uint8)
-    filename = "/home/sara/Documents/Master-thesis/TFLite/data/big.jpg"
+    img = np.zeros([5000,5000,3], np.uint8)
+    filename = "/home/sara/Documents/Master-thesis/TFLite/data/medium.jpg"
     cv2.imwrite(filename, img)
 
 def calculate_tiles(imgsize, inputsize):
@@ -23,6 +23,6 @@ def calculate_tiles(imgsize, inputsize):
     print(f"edge tiles: {w+h+1}")
 
 
-#create_big_im()
+create_big_im()
 
-calculate_tiles(imgsize = (10000, 10000), inputsize = (768,768))
+#calculate_tiles(imgsize = (10000, 10000), inputsize = (768,768))
