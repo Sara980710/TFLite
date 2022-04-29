@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y zip tmux libgl1-mesa-glx
 # Cmake
 RUN apt-get install -y libprotobuf-dev protobuf-compiler
 RUN apt-get update && apt-get -y install cmake
+RUN apt update && apt install libopencv-dev python3-opencv -y && apt install ocl-icd-opencl-dev
 
 WORKDIR /
 
