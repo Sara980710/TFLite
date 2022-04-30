@@ -11,11 +11,15 @@ threads="1"
 verbose="0" # (0:false, 1:true)
 
 image="big.jpg"
-pathTFLite="/home/ebara/Documents/master_thesis/TFLite" # AI Sweden computer
+
+pathTFLite="/TFLite" # Aiqu
+#pathTFLite="/home/ebara/Documents/master_thesis/TFLite" # AI Sweden computer
 #pathTFLite="/home/sara/Documents/Master-thesis/TFLite" # Saras computer
 #pathTFLite="/home/spacecloud/ebara/ml_performancetests" # ix5
 
-echo "Info: precisions:$precisions, types:$types, sizes:$sizes, iterations:$iterations, device:$device, path_models:$pathTFLite/models, image: $image, nr threads: $threads, verbose: $verbose"
+savePath="/project/tflite_gpu_measures" # Aiqu
+
+echo "Info: iterations:$iterations, path_models:$pathTFLite/models, image: $image, nr threads: $threads, verbose: $verbose"
 
 for device in ${devices[@]}; do
     for type in "${types[@]}"; do
@@ -31,11 +35,11 @@ for device in ${devices[@]}; do
                     model="${size}-int8.tflite"
                 fi
                 echo "--------------------------------------------------------------"
-                echo "Type: $type, Precision: $precision, Size: $size, Model: $model"
+                echo "Type: $type, Precision: $precision, Size: $size, Model: $model, device:$device"
                 echo ""
                 echo "Starting measure-session"
                 tmux new-session -d -s measure-session "while true; 
-                    do nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv >> gpu_utilization_test/$type$model.log; sleep 0.1; 
+                    do nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv >> $savePath/$type$model.log; sleep 0.1; 
                     done" &
 
                 sleep 1;
