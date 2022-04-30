@@ -63,5 +63,5 @@ _deps
 
 /home/sara/Desktop/Master-thesis/master_thesis/TFLite/HelloWorld/build
 [Bb][Uu][Ii][Ll][Dd]/
-tflite-dist/include/*
+#tflite-dist/include/*
 .vscode/*
