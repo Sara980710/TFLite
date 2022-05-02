@@ -33,6 +33,19 @@ bash build.sh
 * run_timeit_multiple.sh - time the inference on multiple models at once
 * run_memory.sh - measure the memory usage of the programs
 
+## Measurements
+arg: [path to model, iterations, precision]
+````
+./build/TFLiteTimeitGPUSimple /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 100 1 
+````
+arg: [path to model, precision, path to model, threads, device, verbose]
+````
+./build/TFLiteMemory /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 0
+````
+(Maximum resident set size)
+````
+/usr/bin/time -v <program> <args>
+````
 ## Makefile
 VPN and SSH is used to achieve access to the satellite computer where TFLite is already installed.
 * Copy the src folder, models folder and Makefile to the satellite computer using scp (safe copy)
