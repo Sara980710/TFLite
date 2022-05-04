@@ -42,6 +42,10 @@ arg: [path to model, precision, path to model, threads, device, verbose]
 ````
 ./build/TFLiteMemory /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 0
 ````
+arg: [path to model, iterations, precision, path to model, threads, device, verbose]
+````
+./build/TFLiteTimeit /home/spacecloud/ebara/ml_performancetests/models/yolo_models/5024-fp16.tflite 3 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 0
+````
 (Maximum resident set size)
 ````
 /usr/bin/time -v <program> <args>
