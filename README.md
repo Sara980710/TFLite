@@ -34,19 +34,38 @@ bash build.sh
 * run_memory.sh - measure the memory usage of the programs
 
 ## Measurements
+### TFLite GPU time simple
 arg: [path to model, iterations, precision]
 ````
 ./build/TFLiteTimeitGPUSimple /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 100 1 
 ````
-arg: [path to model, precision, path to model, threads, device, verbose]
+### Memory program 
+In terminal 1:
+````
+top -b -n 1000 > top-iterations.txt
+````
+In terminal 2:
+arg: [path to model, precision, path to image, threads, device, verbose]
 ````
 ./build/TFLiteMemory /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 0
 ````
+or 
+arg: [path to model, precision, threads, device, verbose]
+````
+./build/TFLiteMemoryInference /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 1 1 0
+````
+In terminal 1:
+````
+top-iterations.txt | grep 'MiB Mem'
+top-iterations.txt | grep TFLiteMemory
+````
+
+### Timing program (detailed)
 arg: [path to model, iterations, precision, path to model, threads, device, verbose]
 ````
 ./build/TFLiteTimeit /home/spacecloud/ebara/ml_performancetests/models/yolo_models/5024-fp16.tflite 3 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 0
 ````
-(Maximum resident set size)
+### (Maximum resident set size)
 ````
 /usr/bin/time -v <program> <args>
 ````
