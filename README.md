@@ -56,8 +56,8 @@ arg: [path to model, precision, threads, device, verbose]
 ````
 In terminal 1:
 ````
-top-iterations.txt | grep 'MiB Mem'
-top-iterations.txt | grep TFLiteMemory
+cat top-iterations.txt | grep 'MiB Mem'
+cat top-iterations.txt | grep TFLiteMemory
 ````
 
 ### Timing program (detailed)
