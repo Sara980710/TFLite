@@ -54,6 +54,11 @@ arg: [path to model, precision, threads, device, verbose]
 ````
 ./build/TFLiteMemoryInference /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 1 1 0
 ````
+or
+arg: [path to image, convert to float or not]
+````
+./build/TFLiteMemoryImage /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 
+````
 In terminal 1:
 ````
 cat top-iterations.txt | grep 'MiB Mem'
