@@ -39,6 +39,11 @@ arg: [path to model, iterations, precision]
 ````
 ./build/TFLiteTimeitGPUSimple /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 100 1 
 ````
+arg: [path to model, iterations, precision, path to image, threads, device, verbose]
+````
+./build/TFLiteTimeitInference /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 100 1 
+````
+
 ### Memory program 
 In terminal 1:
 ````
