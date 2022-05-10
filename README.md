@@ -52,7 +52,7 @@ top -b -n 1000 > top-iterations.txt
 In terminal 2:
 arg: [path to model, precision, path to image, threads, device, method (1 or 2), verbose]
 ````
-./build/TFLiteMemory /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 0
+./build/TFLiteMemory /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 1 0
 ````
 or 
 arg: [path to model, precision, threads, device, verbose]
