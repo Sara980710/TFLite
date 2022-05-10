@@ -33,6 +33,12 @@ bash build.sh
 * run_timeit_multiple.sh - time the inference on multiple models at once
 * run_memory.sh - measure the memory usage of the programs
 
+## Detector
+* method 0: just invoke
+* method 1: convert image first to float
+* method 2: convert only tile to float
+* method 3: never copy values to GPU
+
 ## Measurements
 ### TFLite GPU time simple
 arg: [path to model, iterations, precision]
