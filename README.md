@@ -37,7 +37,7 @@ bash build.sh
 * method 0: just invoke
 * method 1: convert image first to float
 * method 2: convert only tile to float
-* method 3: never copy values to GPU
+* method 3: copy values one by one
 
 ## Measurements
 ### TFLite GPU time simple
@@ -62,7 +62,7 @@ In terminal 1:
 top -b -n 1000 > top-iterations.txt
 ````
 In terminal 2:
-arg: [path to model, precision, path to image, threads, device, method (0 or 1 or 2), verbose]
+arg: [path to model, precision, path to image, threads, device, method (0 or 1 or 2 or 3), verbose]
 ````
 ./build/TFLiteMemory /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 2 0
 ````
