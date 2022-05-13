@@ -58,6 +58,7 @@ arg: [path to model, iterations, precision, path to image, threads, device, meth
 Turn on/off swap-memory:
 * ````sudo swapoff -a  ````
 * ````sudo swapon -a  ````
+
 In terminal 1:
 ````
 top -b -n 1000 > top-iterations.txt
