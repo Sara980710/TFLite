@@ -40,7 +40,7 @@ bash build.sh
 * method 3: copy values one by one
 
 ## Measurements
-### TFLite GPU time simple
+### Time
 arg: [path to model, iterations, precision]
 ````
 ./build/TFLiteTimeitGPUSimple /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 100 1 
@@ -49,14 +49,15 @@ arg: [path to model, iterations, precision, path to image, threads, device, verb
 ````
 ./build/TFLiteTimeitInference /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 100 1 
 ````
-
-### Timing program (detailed)
 arg: [path to model, iterations, precision, path to image, threads, device, method, verbose]
 ````
 ./build/TFLiteTimeit /home/spacecloud/ebara/ml_performancetests/models/yolo_models/5024-fp16.tflite 3 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 2 0
 ````
 
-### Memory program 
+### Memory 
+Turn on/off swap-memory:
+* ````sudo swapoff -a  ````
+* ````sudo swapon -a  ````
 In terminal 1:
 ````
 top -b -n 1000 > top-iterations.txt
