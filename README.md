@@ -82,6 +82,7 @@ In terminal 1:
 ````
 cat top-iterations.txt | grep 'MiB Mem'
 cat top-iterations.txt | grep TFLiteMemory
+cat iterations.log | grep TFLite >> memory/filename.log;
 ````
 ### (Maximum resident set size)
 ````
