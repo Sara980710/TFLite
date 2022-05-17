@@ -61,7 +61,7 @@ Turn on/off swap-memory:
 
 In terminal 1:
 ````
-top -b -n 1000 > top-iterations.txt
+top -b -n 1000 > iterations.log
 ````
 In terminal 2:
 arg: [path to model, precision, path to image, threads, device, method (0 or 1 or 2 or 3), verbose, detect]
@@ -80,8 +80,8 @@ arg: [path to image, convert to float or not]
 ````
 In terminal 1:
 ````
-cat top-iterations.txt | grep 'MiB Mem'
-cat top-iterations.txt | grep TFLiteMemory
+cat iterations.log | grep 'MiB Mem'
+cat iterations.log | grep TFLiteMemory
 cat iterations.log | grep TFLite >> memory/filename.log;
 ````
 ### (Maximum resident set size)
