@@ -65,3 +65,8 @@ _deps
 [Bb][Uu][Ii][Ll][Dd]/
 #tflite-dist/include/*
 .vscode/*
+data/*
+memory/*
+models/*
+screenlog.*
+tflite-dist/*

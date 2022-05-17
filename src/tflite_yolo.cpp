@@ -24,13 +24,14 @@ int main(int argc, char **argv) {
   bool verbose = true;
   bool gpu = false;
   bool normalize = true;
+  const uint8_t method = 2;
 
   Detector detector(modelFileName, gpu, threads, verbose);
-  detector.load_image(imageFileName, desiredPrecision, normalize, verbose);
+  detector.load_image(imageFileName, desiredPrecision, normalize, verbose, method);
   detector.tile_image(verbose);
 
   // Run
-  detector.load_input(verbose);
+  detector.load_input(verbose, method);
   detector.detect(verbose);
 
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <stdlib.h> 
 #include "Detector.h"
 #include "tensorflow/lite/delegates/gpu/delegate.h"
 
@@ -65,7 +66,7 @@ Detector::Detector(const char *model_path, bool gpu, int threads, bool verbose){
 
 Detector::~Detector(){if (m_gpu) {TfLiteGpuDelegateV2Delete(m_delegate);}};
 
-void Detector::load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose){
+void Detector::load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose, const uint8_t method){
   // Load image 
   if (verbose) std::cout<<"Loading image...\n";
 
@@ -75,46 +76,49 @@ void Detector::load_image(const char *image_path, int desiredPrecision, bool nor
       throw std::runtime_error("Failed to load image");
       exit(-1);
   }
+  
+  if (method == 1) {
+    int input = m_interpreter->inputs()[0];
 
-  int input = m_interpreter->inputs()[0];
+    // Check input type
+    if (verbose) std::cout<<"Creating tensors...\n";
 
-  // Check input type
-  if (verbose) std::cout<<"Creating tensors...\n";
+      switch (m_interpreter->tensor(input)->type)
+      {
+      case kTfLiteFloat32:
+        if (desiredPrecision == 0) {image.convertTo(image, CV_32F, 1.0, 0);
+          if (verbose) std::cout<<"Input precision: "<<"Float32"<<std::endl;
+        } 
+        else if (desiredPrecision == 1) {
+          m_interpreter->SetAllowFp16PrecisionForFp32(true);
+          if (verbose) std::cout<<"Input type: "<<"Float16"<<std::endl;
+        } 
+        else {
+          fprintf(stderr, "cannot handle precision given in the arguments\n");
+        }
+        if (normalize) {
+          // (yolo)
+          image.convertTo(image, CV_32F, 1.0 / 255, 0);
+        } else {
+          // (classification)
+          image.convertTo(image, CV_32F, 1.0, 0);
+        }
 
-  switch (m_interpreter->tensor(input)->type)
-    {
-    case kTfLiteFloat32:
-      if (desiredPrecision == 0) {image.convertTo(image, CV_32F, 1.0, 0);
-        if (verbose) std::cout<<"Input precision: "<<"Float32"<<std::endl;
-      } 
-      else if (desiredPrecision == 1) {
-        m_interpreter->SetAllowFp16PrecisionForFp32(true);
-        if (verbose) std::cout<<"Input type: "<<"Float16"<<std::endl;
-      } 
-      else {
-        fprintf(stderr, "cannot handle precision given in the arguments\n");
-      }
-      if (normalize) {
-        // (yolo)
-        image.convertTo(image, CV_32F, 1.0 / 255, 0);
-      } else {
-        // (classification)
-        image.convertTo(image, CV_32F, 1.0, 0);
-      }
-
-      break;
-    case kTfLiteUInt8:
-        if (verbose) std::cout<<"-*i*-- Input type: "<<"int8"<<std::endl;
         break;
-    default:
-        fprintf(stderr, "cannot handle input type\n");
-        exit(-1);
-    }
+      case kTfLiteUInt8:
+          if (verbose) std::cout<<"-*i*-- Input type: "<<"int8"<<std::endl;
+          break;
+      default:
+          fprintf(stderr, "cannot handle input type\n");
+          exit(-1);
+      }
 
-    // Normalize to plot with right values (classification)
-    if (!normalize) {
-      image.convertTo(image, CV_32F, 1.0/255, 0);
-    }
+      // Normalize to plot with right values (classification)
+      if (!normalize) {
+        image.convertTo(image, CV_32F, 1.0/255, 0);
+      }
+  }
+  
 };
 
 void Detector::tile_image(bool verbose) {
@@ -148,23 +152,86 @@ void Detector::tile_image(bool verbose) {
   }
 }
 
-void Detector::load_input(bool verbose) {
-  if (verbose) std::cout << "Loading input, tile " << currentTile + 1<< "/" << m_tiles.size() << std::endl;
+void Detector::load_input(bool verbose, const uint8_t method) {
   int input = m_interpreter->inputs()[0];
+  if (verbose) std::cout << "Loading input, tile " << currentTile + 1<< "/" << m_tiles.size() << std::endl;
 
-  switch (m_interpreter->tensor(input)->type)
+  if (method == 0) {
+    float* input_tensor_float = m_interpreter->typed_input_tensor<float>(0);
+  } else if (method == 1) {
+    switch (m_interpreter->tensor(input)->type)
     {
     case kTfLiteFloat32:
-      memcpy(m_interpreter->typed_tensor<float>(0), image(m_tiles[currentTile]).data, inDims[0] * inDims[1] * inDims[2] * inDims[3] * 4); 
+        memcpy(m_interpreter->typed_tensor<float>(0), image(m_tiles[currentTile]).data, inDims[0] * inDims[1] * inDims[2] * inDims[3] * 4); 
       break;
     case kTfLiteUInt8:
-        memcpy(m_interpreter->typed_tensor<uint8_t>(0), image(m_tiles[currentTile]).data, inDims[0] * inDims[1] * inDims[2] * inDims[3] * 4);
+        memcpy(m_interpreter->typed_tensor<uint8_t>(0), image(m_tiles[currentTile]).data, inDims[0] * inDims[1] * inDims[2] * inDims[3] * 1);
         break;
     default:
         fprintf(stderr, "cannot handle input type\n");
         exit(-1);
     }
-  currentTile ++;
+  } else if (method == 2) {
+    int tileByteSize = inDims[1] * inDims[2] * inDims[3] * 4;
+    
+    //std::cout<<m_interpreter->inputs().size()<<std::endl;
+
+    for (int i=0; i < inDims[0]; i++) {
+        
+        cv::Mat tile = image(m_tiles[currentTile]);
+
+        switch (m_interpreter->tensor(input)->type)
+        {
+        case kTfLiteFloat32:
+            tile.convertTo(tile, CV_32F, 1.0 / 255, 0);
+            //std::cout<<m_interpreter->typed_tensor<float>(0)<<std::endl;
+            memcpy(m_interpreter->typed_tensor<float>(0)+tileByteSize*i, tile.data, tileByteSize); 
+          break;
+        case kTfLiteUInt8:
+            memcpy(m_interpreter->typed_tensor<uint8_t>(0), tile.data, inDims[0] * inDims[1] * inDims[2] * inDims[3] * 1);
+            break;
+        default:
+            fprintf(stderr, "cannot handle input type\n");
+            exit(-1);
+        }
+    }
+  } else if (method == 3) {
+    for (int i=0; i < inDims[0]; i++) {
+        cv::Mat tile = image(m_tiles[currentTile]);
+        float* input_tensor_float = m_interpreter->typed_tensor<float>(0);
+        switch (m_interpreter->tensor(input)->type)
+        {
+        case kTfLiteFloat32:
+            //tile.convertTo(tile, CV_32F, 1.0 / 255, 0);
+            for (int idx = 0; idx < tile.size[1] * tile.size[0]; idx++){
+              int col = idx % tile.size[0];
+              int row = idx / tile.size[0];
+              cv::Vec3b intensity = image.at<cv::Vec3b>(row, col);
+              
+              input_tensor_float[(inDims[1] * inDims[2] * inDims[3]*i+idx*3+0)] = float(intensity.val[0])/ 255; //R <- B
+              input_tensor_float[(inDims[1] * inDims[2] * inDims[3]*i+idx*3+1)] = float(intensity.val[1])/ 255; //G <- G
+              input_tensor_float[(inDims[1] * inDims[2] * inDims[3]*i+idx*3+2)] = float(intensity.val[2])/ 255; //B <- R
+            }
+          break;
+        case kTfLiteUInt8:
+            for (int idx = 0; idx < tile.size[1] * tile.size[0]; idx++){
+              int col = idx % tile.size[0];
+              int row = idx / tile.size[0];
+              cv::Vec3b intensity = image.at<cv::Vec3b>(row, col);
+              
+              input_tensor_float[(inDims[1] * inDims[2] * inDims[3]*i+idx*3+0)] = uint8_t(intensity.val[0])/ 255; //R <- B
+              input_tensor_float[(inDims[1] * inDims[2] * inDims[3]*i+idx*3+1)] = uint8_t(intensity.val[1])/ 255; //G <- G
+              input_tensor_float[(inDims[1] * inDims[2] * inDims[3]*i+idx*3+2)] = uint8_t(intensity.val[2])/ 255; //B <- R
+            }
+            break;
+        default:
+            fprintf(stderr, "cannot handle input type\n");
+            exit(-1);
+        }
+    }
+  }
+
+  currentTile = inDims[0] + currentTile;
   if (currentTile != -1 && currentTile >= m_tiles.size()) {
     currentTile = -1;
     if (verbose) std::cout << "All tiles done!" << std::endl;

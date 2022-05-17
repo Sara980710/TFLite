@@ -3,6 +3,7 @@
 #include <numeric>
 
 struct Measures{
+  std::vector<float> init;
   std::vector<float> loadImage;
   std::vector<float> tileImage;
   std::vector<float> loadInput;
@@ -21,14 +22,18 @@ float getAverage(std::vector<float> timeMeasures) {
     return duration;
 }
 
-void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, const char *imageFileName, int desiredPrecision, bool normalize){
-   Detector detector(modelFileName, gpu, threads, verbose);
-
-  // Pre process
+void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, const char *imageFileName, int desiredPrecision, bool normalize, const uint8_t method){
   auto t1 = std::chrono::high_resolution_clock::now();
-  detector.load_image(imageFileName, desiredPrecision, normalize, verbose);
+  Detector detector(modelFileName, gpu, threads, verbose);
   auto t2 = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+  s_measures.init.push_back(duration);
+
+  // Pre process
+  t1 = std::chrono::high_resolution_clock::now();
+  detector.load_image(imageFileName, desiredPrecision, normalize, verbose, method);
+  t2 = std::chrono::high_resolution_clock::now();
+  duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
   s_measures.loadImage.push_back(duration);
 
   t1 = std::chrono::high_resolution_clock::now();
@@ -43,7 +48,7 @@ void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, co
   std::vector<float> t_getOutput;
   while (detector.currentTile != -1) {
     t1 = std::chrono::high_resolution_clock::now();
-    detector.load_input(verbose);
+    detector.load_input(verbose, method);
     t2 = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
     t_loadInput.push_back(duration);
@@ -70,10 +75,21 @@ void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, co
 }
 
 int main(int argc, char **argv) {
-  if (argc != 8) {
+  std::cout << "Starting..." << std::endl;
+  auto t1all = std::chrono::high_resolution_clock::now();
+  if (argc != 9) {
     std::cout<<argc<<std::endl;
-    throw std::invalid_argument("Required arguments: \n            -path to TFLite model file \n            -iterations for stable measures\n            -desired precision (0:f32, 1:f16, 2:int8)\n            -path to image input\n            -Number of threads\n            -device (0:cpu or 1:gpu)\n            -verbose (0:false, 1:true)");
+    throw std::invalid_argument("Required arguments: \n            "
+                                    "-path to TFLite model file \n            "
+                                    "-iterations for stable measures\n            "
+                                    "-desired precision (0:f32, 1:f16, 2:int8)\n            "
+                                    "-path to image input\n            "
+                                    "-Number of threads\n            "
+                                    "-device (0:cpu or 1:gpu)\n            "
+                                    "-method (1:convert image to float or 2:convert input to float)\n            "
+                                    "-verbose (0:false, 1:true)");
   }
+
   const char *modelFileName = argv[1];
   const int iterations = std::stoi(argv[2]);
   const int desiredPrecision = std::stoi(argv[3]);
@@ -85,20 +101,29 @@ int main(int argc, char **argv) {
     gpu = true;
   }
 
+  const uint8_t method = std::stoi(argv[7]);
+
   bool verbose = false;
-  if (std::stoi(argv[7]) == 1) {
+  if (std::stoi(argv[8]) == 1) {
     verbose = true;
   }
   
   bool normalize = true;
 
   std::cout << "Total iterations: " << iterations << std::endl;
-  std::cout << "Iteration progress: " << std::flush;
+  std::cout << "Iteration progress: " << std::endl;
   for (int i=0; i < iterations; i++) {
+    auto t1 = std::chrono::high_resolution_clock::now();
     std::cout << i + 1<< ", " << std::flush;
-    run_once(modelFileName, gpu, threads, verbose, imageFileName, desiredPrecision, normalize);
+    run_once(modelFileName, gpu, threads, verbose, imageFileName, desiredPrecision, normalize, method);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::cout << "Duration: " << std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count() << std::endl;
   }
 
+  auto t2all = std::chrono::high_resolution_clock::now();
+  std::cout << "Duration total: " << std::chrono::duration_cast<std::chrono::microseconds>( t2all - t1all ).count() << std::endl;
+
+  float timeInit = getAverage(s_measures.init);
   float timeLoadImage = getAverage(s_measures.loadImage);
   float timeTileImage = getAverage(s_measures.tileImage);
   float timeLoadInput = getAverage(s_measures.loadInput);
@@ -111,7 +136,10 @@ int main(int argc, char **argv) {
   std::cout << std::fixed;
 
   std::cout << "\nMeasures detail, (average, min, max): \n";
-  std::cout << "- Preprocessing: " << timeLoadImage + timeTileImage <<" us\n";
+  std::cout << "- Preprocessing: " << timeInit + timeLoadImage + timeTileImage <<" us\n";
+  std::cout << "  - Init: (" << timeInit << ", " \
+                                  << *std::min_element(s_measures.init.begin(), s_measures.init.end()) << ", " \
+                                  << *std::max_element(s_measures.init.begin(), s_measures.init.end()) << ") us\n";
   std::cout << "  - Load image: (" << timeLoadImage << ", " \
                                   << *std::min_element(s_measures.loadImage.begin(), s_measures.loadImage.end()) << ", " \
                                   << *std::max_element(s_measures.loadImage.begin(), s_measures.loadImage.end()) << ") us\n";

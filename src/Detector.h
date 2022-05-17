@@ -26,9 +26,9 @@ class Detector
   Detector(const char *model_path, bool gpu, int threads, bool verbose);
   ~Detector();
 
-  void load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose);
+  void load_image(const char *image_path, int desiredPrecision, bool normalize, bool verbose, const uint8_t method);
   void tile_image(bool verbose);
-  void load_input(bool verbose);
+  void load_input(bool verbose, const uint8_t method);
   void detect(bool verbose);
   float* get_output(bool verbose);
 };

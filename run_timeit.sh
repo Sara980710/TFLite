@@ -7,11 +7,11 @@ size="768" # ( "32" "192" "384" "768" "1152" "1536" )
 device="0" # (0:cpu or 1:gpu)
 batch_size="2"
 
-iterations="3"
+iterations="1"
 threads="1"
 verbose="1" # (0:false, 1:true)
 
-image="medium.jpg"
+image="big.jpg"
 #pathTFLite="/home/ebara/Documents/master_thesis/TFLite" # AI Sweden computer
 pathTFLite="/home/sara/Documents/Master-thesis/TFLite" # Saras computer
 #pathTFLite="/home/spacecloud/ebara/ml_performancetests" # ix5

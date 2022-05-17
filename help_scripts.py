@@ -3,8 +3,8 @@ import numpy as np
 
 
 def create_big_im():
-    img = np.zeros([5000,5000,3], np.uint8)
-    filename = "/home/sara/Documents/Master-thesis/TFLite/data/medium.jpg"
+    img = np.zeros([10000,10000,3], np.uint8)
+    filename = "/home/sara/Documents/Master-thesis/TFLite/data/llbig.bmp"
     cv2.imwrite(filename, img)
 
 def calculate_tiles(imgsize, inputsize):

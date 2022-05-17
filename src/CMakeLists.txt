@@ -19,14 +19,26 @@ set(TFLITE_LIBS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../tflite-dist/libs/linux_x64/"
 # Set names
 set(YOLO TFLiteYolov5)
 set(CLASS TFLiteClassification)
+
 set(TIME TFLiteTimeit)
+set(TIMEINFERENCE TFLiteTimeitInference)
+
 set(MEMORY TFLiteMemory)
+set(MEMORYIMAGE TFLiteMemoryImage)
+set(MEMORYINFERENCE TFLiteMemoryInference)
+
 
 # Create executable files
 add_executable(${YOLO} tflite_yolo.cpp Detector.cpp Detector.h)
 add_executable(${CLASS} tflite_classification.cpp Detector.cpp Detector.h)
+
 add_executable(${TIME} tflite_timeit.cpp Detector.cpp Detector.h)
+add_executable(${TIMEINFERENCE} tflite_timeit_inference.cpp Detector.cpp Detector.h)
+
 add_executable(${MEMORY} tflite_mem.cpp Detector.cpp Detector.h)
+add_executable(${MEMORYIMAGE} tflite_mem_image.cpp)
+add_executable(${MEMORYINFERENCE} tflite_mem_inference.cpp Detector.cpp Detector.h)
+
 
 # TFLite GPU libraries
 foreach(_target
@@ -45,6 +57,12 @@ endforeach()
 # Link libraries
 target_link_libraries(${YOLO} ${TFLITE_LIBS} ${OpenCV_LIBS})
 target_link_libraries(${CLASS} ${TFLITE_LIBS} ${OpenCV_LIBS})
+
 target_link_libraries(${TIME} ${TFLITE_LIBS} ${OpenCV_LIBS})
+target_link_libraries(${TIMEINFERENCE} ${TFLITE_LIBS} ${OpenCV_LIBS})
+
 target_link_libraries(${MEMORY} ${TFLITE_LIBS} ${OpenCV_LIBS})
+target_link_libraries(${MEMORYIMAGE} ${OpenCV_LIBS})
+target_link_libraries(${MEMORYINFERENCE} ${TFLITE_LIBS} ${OpenCV_LIBS})
+
 

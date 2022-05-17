@@ -3,7 +3,10 @@
 
 int main(int argc, char **argv) {
   if (argc != 4) {
-    throw std::invalid_argument("Required arguments: \n            -path to TFLite model file \n            -desired precision (0:f32, 1:f16, 2:int8)\n            -path to image input");
+    throw std::invalid_argument("Required arguments: \n            "
+                                  "-path to TFLite model file \n            "
+                                  "-desired precision (0:f32, 1:f16, 2:int8)\n            "
+                                  "-path to image input");
   }
   const char *modelFileName = argv[1];
   int desiredPrecision = std::stoi(argv[2]);
@@ -13,13 +16,14 @@ int main(int argc, char **argv) {
   bool verbose = true;
   bool gpu = false;
   bool normalize = false;
+  const uint8_t method = 1;
   
   Detector detector(modelFileName, gpu, threads, verbose);
-  detector.load_image(imageFileName, desiredPrecision, normalize, verbose);
+  detector.load_image(imageFileName, desiredPrecision, normalize, verbose, method);
   detector.tile_image(verbose);
 
   // Run
-  detector.load_input(verbose);
+  detector.load_input(verbose, method);
   detector.detect(verbose);
 
 

@@ -1,60 +1,85 @@
 #! /bin/bash
 
 # (0:f32, 1:f16, 2:int8)
-declare -a precisions=( "0" "1" ) #( "0" "1" "2" ) 
+declare -a precisions=( "1" ) #( "0" "1" "2" ) 
 declare -a types=( "yolo_models" "class_models" ) #( "yolo_models" "class_models" )
-declare -a sizes=( "192" "384" "768" "1152" "1536" ) # ( "32" "192" "384" "768" "1152" "1536" )
-declare -a devices=( "0" "1" ) #( "1" "0" ) # (0:cpu or 1:gpu)
-declare -a batch_sizes=( "1" ) #( "1" "5" "10" "50" "100")
+declare -a sizes=( "32" "192" "480" "288" "672" "768" "1152" "1440" "2080" "3360" ) # ( "32" "192" "384" "768" "1152" "1536" "3072")
+declare -a devices=( "0" ) #( "1" "0" ) # (0:cpu or 1:gpu)
+declare -a batch_sizes=( "1" ) #"2" "3" "4" )
 
-threads="1"
+threadses=( "1" "2" "3" "4" "5")
+methods=( "2" "3" ) #(0 or 1 or 2 or 3)
+
 verbose="0" # (0:false, 1:true)
+detect="1" # (0:false, 1:true)
 
 image="big.jpg"
-pathTFLite="/home/ebara/Documents/master_thesis/TFLite" # AI Sweden computer
+
+#pathTFLite="/TFLite" # Aiqu
+#pathTFLite="/home/ebara/Documents/master_thesis/TFLite" # AI Sweden computer
 #pathTFLite="/home/sara/Documents/Master-thesis/TFLite" # Saras computer
-#pathTFLite="/home/spacecloud/ebara/ml_performancetests" # ix5
+pathTFLite="/home/spacecloud/ebara/ml_performancetests" # ix5
+#savePath="/project/tflite_gpu_measures" # Aiqu
 
-https://www.tecmint.com/save-top-command-output-to-a-file/
+echo "Info: path_models:$pathTFLite/models, image: $image, verbose: $verbose"
 
-echo "Info: precisions:$precisions, types:$types, sizes:$sizes, iterations:$iterations, device:$device, path_models:$pathTFLite/models, image: $image, nr threads: $threads, verbose: $verbose"
-
+for bs in "${batch_sizes[@]}"; do
+for threads in "${threadses[@]}"; do 
+for method in ${methods[@]}; do
+for type in "${types[@]}"; do
+for precision in "${precisions[@]}"; do
 for device in ${devices[@]}; do
-    for type in "${types[@]}"; do
-        for precision in "${precisions[@]}"; do
-            for size in "${sizes[@]}"; do  
-                for bs in "${batch_sizes[@]}"; do 
+for size in "${sizes[@]}"; do          
+                         
+    # Get model name
+    if [ "$precision" = "0" ]; then
+        if [ "$bs" = "1" ]; then
+            model="${size}-fp32.tflite"
+        else
+            model="${size}_${bs}-fp32.tflite"
+        fi
+    elif [ "$precision" = "1" ]; then
+        if [ "$bs" = "1" ]; then
+            model="${size}-fp16.tflite"
+        else
+            model="${size}_${bs}-fp16.tflite"
+        fi
+    elif [ "$precision" = "2" ]; then
+        model="${size}-int8.tflite"
+    fi
 
-                if [ "$precision" = "0" ]; then
-                    model="${size}-fp32.tflite"
-                elif [ "$precision" = "1" ]; then
-                    model="${size}-fp16.tflite"
-                elif [ "$precision" = "2" ]; then
-                    model="${size}-int8.tflite"
-                fi
-                echo "--------------------------------------------------------------"
-                echo "Type: $type, Precision: $precision, Size: $size, Model: $model"
-                echo ""
-                echo "Starting measure-session"
-                tmux new-session -d -s measure-session "while true; 
-                    do nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv >> gpu_utilization_test/$type$model.log; sleep 0.1; 
-                    done" &
+    # Do stuff
+    if [ "$threads" = "1" ] || ([ "$threads" != "1" ] && [ "$device" = "0" ]); then
 
-                sleep 1;
-                echo "Starting program"
-                
-                cd build; 
-                ./TFLiteMemory $pathTFLite/models/$type/$model $precision $pathTFLite/data/$image $threads $device $verbose;
-                cd ..;
-                
-                sleep 1;
-                echo "Killing measure-session"
-                tmux kill-session -t measure-session;
-                echo ""
-                sleep 10;
+        echo "--------------------------------------------------------------"
+        echo "Method: $method, device:$device, Type: $type, Precision: $precision, Size: $size, Threads: $threads, Batch-size: $bs, Model: $model "
+        echo "./build/TFLiteMemory $pathTFLite/models/$type/$model $precision $pathTFLite/data/$image $threads $device $method $verbose;"
 
-                done
-            done
-        done
-    done
+        echo "Starting measure-session"
+        screen -S measure -d -m -L -Logfile iterations.log top &
+        sleep 3;
+        ./build/TFLiteMemory $pathTFLite/models/$type/$model $precision $pathTFLite/data/$image $threads $device $method $verbose;
+
+        echo "Stopping measure-session"
+        screen -XS measure quit;
+
+        echo "Saving results"
+        echo "                                   VIRT    RES     SHR     %CPU   %MEM" >> memory/${model}_${type}_d${device}_m${method}_t${threads}.log;
+        sleep 3;
+        cat iterations.log | grep TFLite >> memory/${model}_${type}_d${device}_m${method}_t${threads}.log;
+        rm iterations.log;
+
+        sleep 3;
+    else
+    echo "SKIPPED Method: $method, device:$device, Type: $type, Precision: $precision, Size: $size, Threads: $threads, Batch-size: $bs, Model: $model "
+    fi
 done
+done
+done
+done
+done
+done
+done
+
+cp screenlog.0 memory/.;
+zip -r memory.zip memory;
