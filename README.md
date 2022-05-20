@@ -49,9 +49,9 @@ arg: [path to model, iterations, precision, path to image, threads, device, verb
 ````
 ./build/TFLiteTimeitInference /home/spacecloud/ebara/ml_performancetests/models/yolo_models/3072-fp16.tflite 100 1 
 ````
-arg: [path to model, iterations, precision, path to image, threads, device, method, verbose]
+arg: [path to model, iterations, precision, path to image, threads, device, method, verbose, invoke (1 or 0)]
 ````
-./build/TFLiteTimeit /home/spacecloud/ebara/ml_performancetests/models/yolo_models/5024-fp16.tflite 3 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 2 0
+./build/TFLiteTimeit /home/spacecloud/ebara/ml_performancetests/models/yolo_models/5024-fp16.tflite 3 1 /home/spacecloud/ebara/ml_performancetests/data/big.jpg 1 1 2 0 1
 ````
 
 ### Memory 
@@ -61,7 +61,7 @@ Turn on/off swap-memory:
 
 In terminal 1:
 ````
-top -b -n 1000 > top-iterations.txt
+top -b -n 1000 > iterations.log
 ````
 In terminal 2:
 arg: [path to model, precision, path to image, threads, device, method (0 or 1 or 2 or 3), verbose, detect]
@@ -80,10 +80,18 @@ arg: [path to image, convert to float or not]
 ````
 In terminal 1:
 ````
-cat top-iterations.txt | grep 'MiB Mem'
-cat top-iterations.txt | grep TFLiteMemory
+cat iterations.log | grep 'MiB Mem'
+cat iterations.log | grep TFLiteMemory
 cat iterations.log | grep TFLite >> memory/filename.log;
 ````
+
+### Python programs
+````
+python3 detector.py --weights models/yolo_models/1440-fp16.tflite --image data/big.jpg --gpuoff
+python3 detector_slim.py --weights models/yolo_models/1440-fp16.tflite --image data/big.jpg
+python3 detector_lite.py --weights models/yolo_models/1440-fp16.tflite --image data/big.jpg
+````
+
 ### (Maximum resident set size)
 ````
 /usr/bin/time -v <program> <args>
