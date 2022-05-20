@@ -2,13 +2,13 @@
 
 # (0:f32, 1:f16, 2:int8)
 declare -a precisions=( "1" ) #( "0" "1" "2" ) 
-declare -a types=( "yolo_models" "class_models" ) #( "yolo_models" "class_models" )
-declare -a sizes=( "32" "192" "480" "288" "672" "768" "1152" "1440" "2080" "3360" ) # ( "32" "192" "384" "768" "1152" "1536" "3072")
-declare -a devices=( "0" ) #( "1" "0" ) # (0:cpu or 1:gpu)
-declare -a batch_sizes=( "1" ) #"2" "3" "4" )
+declare -a types=( "yolo_models" ) #( "yolo_models" "class_models" )
+declare -a sizes=( "288" "480" "672" ) # ( "32" "192" "384" "768" "1152" "1536" "3072")
+declare -a devices=( "1" ) #( "1" "0" ) # (0:cpu or 1:gpu)
+declare -a batch_sizes=( "3" "4" ) #"2" "3" "4" )
 
-threadses=( "1" "2" "3" "4" "5")
-methods=( "2" "3" ) #(0 or 1 or 2 or 3)
+threadses=( "1" )
+methods=( "3" ) #(0 or 1 or 2 or 3)
 
 verbose="0" # (0:false, 1:true)
 detect="1" # (0:false, 1:true)
@@ -52,13 +52,13 @@ for size in "${sizes[@]}"; do
     if [ "$threads" = "1" ] || ([ "$threads" != "1" ] && [ "$device" = "0" ]); then
 
         echo "--------------------------------------------------------------"
-        echo "Method: $method, device:$device, Type: $type, Precision: $precision, Size: $size, Threads: $threads, Batch-size: $bs, Model: $model "
-        echo "./build/TFLiteMemory $pathTFLite/models/$type/$model $precision $pathTFLite/data/$image $threads $device $method $verbose;"
+        echo "Method: $method, device:$device, Type: $type, Precision: $precision, Size: $size, Threads: $threads, Batch-size: $bs, Model: $model, Detect: $detect"
+        echo "./build/TFLiteMemory $pathTFLite/models/$type/$model $precision $pathTFLite/data/$image $threads $device $method $verbose $detect;"
 
         echo "Starting measure-session"
         screen -S measure -d -m -L -Logfile iterations.log top &
         sleep 3;
-        ./build/TFLiteMemory $pathTFLite/models/$type/$model $precision $pathTFLite/data/$image $threads $device $method $verbose;
+        ./build/TFLiteMemory $pathTFLite/models/$type/$model $precision $pathTFLite/data/$image $threads $device $method $verbose $detect;
 
         echo "Stopping measure-session"
         screen -XS measure quit;

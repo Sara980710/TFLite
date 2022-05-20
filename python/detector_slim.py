@@ -1,15 +1,15 @@
-import tensorflow as tf
-import cv2
-import argparse
-import numpy as np
-import time
-import os
+from tensorflow import lite
+from cv2 import imread
+from argparse import ArgumentParser
+from numpy import zeros, float32
+from time import time
+
 
 class Detector():
 
     def __init__(self, model_path) -> None:
         
-        self.interpreter = tf.lite.Interpreter(model_path)
+        self.interpreter = lite.Interpreter(model_path)
         self.interpreter.allocate_tensors()
 
         details = self.interpreter.get_input_details()
@@ -19,7 +19,7 @@ class Detector():
         self.current_tile = 0
 
     def load_image(self, image_path):
-        self.image = cv2.imread(image_path)
+        self.image = imread(image_path)
 
     def tile_image(self):
         self.tiles = []
@@ -40,7 +40,7 @@ class Detector():
         print(f"Nr tiles: {len(self.tiles)}")
 
     def load_input(self, verbose=False):
-        input_values = np.zeros([self.shape[0],self.shape[1],self.shape[2],self.shape[3]], dtype=np.float32)
+        input_values = zeros([self.shape[0],self.shape[1],self.shape[2],self.shape[3]], dtype=float32)
         for i in range(self.shape[0]):
             if self.current_tile >= len(self.tiles) or self.current_tile == -1:
                 self.current_tile = -1
@@ -49,7 +49,7 @@ class Detector():
             if verbose:
                 print(f"Processing tile: {self.current_tile+1}/{len(self.tiles)}")
             tile = self.tiles[self.current_tile]
-            tile = self.image[tile[0]:tile[0]+tile[2], tile[1]:tile[1]+tile[3]].astype(np.float32)/255.
+            tile = self.image[tile[0]:tile[0]+tile[2], tile[1]:tile[1]+tile[3]].astype(float32)/255.
             input_values[i,...] = tile
             self.current_tile += 1
             
@@ -65,31 +65,14 @@ class Detector():
 
 if __name__=="__main__":
     
-    tf.config.threading.set_inter_op_parallelism_threads(1)
-    tf.config.threading.set_intra_op_parallelism_threads(1)
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument('--weights', type=str, default= '/home/sara/Documents/Master-thesis/TFLite/models/yolo_models/768_2-fp16.tflite', help='initial weights path')
     parser.add_argument('--image', type=str, default= '/home/sara/Documents/Master-thesis/TFLite/data/big.jpg', help='initial weights path')
-    parser.add_argument('--gpuoff', action="store_true", help='Turn of GPU usage')
-
     opt = parser.parse_args()
-
-    if opt.gpuoff:
-        tf.device("/device:CPU:0")
-        print("using CPU")
-    else:
-        tf.device("/GPU:0")
-        print("using GPU")
-    gpu_available = tf.config.list_physical_devices('GPU')
-    print(f"GPU:s{gpu_available}")
-    gpu_available = tf.test.is_gpu_available()
-    print(f"GPU:{gpu_available}")
-
-    
 
     detector = Detector(opt.weights)
     
-    now = time.time()
+    now = time()
     detector.load_image(opt.image)
     detector.tile_image()
 
@@ -97,6 +80,6 @@ if __name__=="__main__":
         detector.load_input(verbose=False)
         detector.detect()
         detector.get_output()
-    then = time.time()
+    then = time()
     print(f"Time taken: {then-now}")
 

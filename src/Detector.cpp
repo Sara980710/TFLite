@@ -174,8 +174,6 @@ void Detector::load_input(bool verbose, const uint8_t method) {
   } else if (method == 2) {
     int tileByteSize = inDims[1] * inDims[2] * inDims[3] * 4;
     
-    //std::cout<<m_interpreter->inputs().size()<<std::endl;
-
     for (int i=0; i < inDims[0]; i++) {
         
         cv::Mat tile = image(m_tiles[currentTile]);
@@ -194,7 +192,8 @@ void Detector::load_input(bool verbose, const uint8_t method) {
             fprintf(stderr, "cannot handle input type\n");
             exit(-1);
         }
-    }
+  }
+    
   } else if (method == 3) {
     for (int i=0; i < inDims[0]; i++) {
         cv::Mat tile = image(m_tiles[currentTile]);

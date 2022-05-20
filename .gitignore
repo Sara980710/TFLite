@@ -70,3 +70,6 @@ memory/*
 models/*
 screenlog.*
 tflite-dist/*
+time/*
+pics/*
+python/__pycache__/*

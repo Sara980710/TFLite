@@ -22,7 +22,7 @@ float getAverage(std::vector<float> timeMeasures) {
     return duration;
 }
 
-void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, const char *imageFileName, int desiredPrecision, bool normalize, const uint8_t method){
+void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, const char *imageFileName, int desiredPrecision, bool normalize, const uint8_t method, bool invoke){
   auto t1 = std::chrono::high_resolution_clock::now();
   Detector detector(modelFileName, gpu, threads, verbose);
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -53,11 +53,13 @@ void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, co
     duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
     t_loadInput.push_back(duration);
 
-    t1 = std::chrono::high_resolution_clock::now();
-    detector.detect(verbose);
-    t2 = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-    t_detect.push_back(duration);
+    if (invoke) {
+      t1 = std::chrono::high_resolution_clock::now();
+      detector.detect(verbose);
+      t2 = std::chrono::high_resolution_clock::now();
+      duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+      t_detect.push_back(duration);
+    }
 
     // Process output
     t1 = std::chrono::high_resolution_clock::now();
@@ -77,7 +79,7 @@ void run_once(const char *modelFileName, bool gpu, int threads, bool verbose, co
 int main(int argc, char **argv) {
   std::cout << "Starting..." << std::endl;
   auto t1all = std::chrono::high_resolution_clock::now();
-  if (argc != 9) {
+  if (argc != 10) {
     std::cout<<argc<<std::endl;
     throw std::invalid_argument("Required arguments: \n            "
                                     "-path to TFLite model file \n            "
@@ -87,7 +89,8 @@ int main(int argc, char **argv) {
                                     "-Number of threads\n            "
                                     "-device (0:cpu or 1:gpu)\n            "
                                     "-method (1:convert image to float or 2:convert input to float)\n            "
-                                    "-verbose (0:false, 1:true)");
+                                    "-verbose (0:false, 1:true)\n            "
+                                    "-invoke (0:false, 1:true)");
   }
 
   const char *modelFileName = argv[1];
@@ -107,6 +110,10 @@ int main(int argc, char **argv) {
   if (std::stoi(argv[8]) == 1) {
     verbose = true;
   }
+  bool invoke = false;
+  if (std::stoi(argv[9]) == 1) {
+    invoke = true;
+  }
   
   bool normalize = true;
 
@@ -115,7 +122,7 @@ int main(int argc, char **argv) {
   for (int i=0; i < iterations; i++) {
     auto t1 = std::chrono::high_resolution_clock::now();
     std::cout << i + 1<< ", " << std::flush;
-    run_once(modelFileName, gpu, threads, verbose, imageFileName, desiredPrecision, normalize, method);
+    run_once(modelFileName, gpu, threads, verbose, imageFileName, desiredPrecision, normalize, method, invoke);
     auto t2 = std::chrono::high_resolution_clock::now();
     std::cout << "Duration: " << std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count() << std::endl;
   }
