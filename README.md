@@ -87,7 +87,7 @@ cat iterations.log | grep TFLite >> memory/filename.log;
 
 ### Python programs
 ````
-python3 detector.py --weights models/yolo_models/1440-fp16.tflite --image data/big.jpg
+python3 detector.py --weights models/yolo_models/1440-fp16.tflite --image data/big.jpg --gpuoff
 python3 detector_slim.py --weights models/yolo_models/1440-fp16.tflite --image data/big.jpg
 python3 detector_lite.py --weights models/yolo_models/1440-fp16.tflite --image data/big.jpg
 ````
